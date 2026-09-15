@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Test
+        run: swift test --enable-code-coverage -Xswiftc -warnings-as-errors
+      - name: Release build
+        run: swift build -c release -Xswiftc -warnings-as-errors
+      - name: iOS Simulator build
+        run: >-
+          xcodebuild -scheme typesafe-sdk-swift
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/typesafe-ios-derived-data"
+          CODE_SIGNING_ALLOWED=NO
+          SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+          build
+
+  test-linux:
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Test
+        run: swift test -Xswiftc -warnings-as-errors
